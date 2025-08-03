@@ -1,0 +1,80 @@
+# Environment variables - QUAN TRỌNG: KHÔNG ĐƯỢC PUSH CÁC FILE NÀY LÊN GITHUB
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# Dependencies
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+**/node_modules/
+
+# Build outputs
+frontend/.next/
+frontend/out/
+frontend/build/
+backend/dist/
+backend/build/
+
+# Runtime data
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Upload files (có thể chứa thông tin nhạy cảm)
+backend/uploads/
+uploads/
+
+# Database dumps
+*.sql
+*.dump
+
+# Coverage reports
+coverage/
+*.lcov
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Next.js specific
+frontend/.next/
+frontend/out/
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Testing
+/coverage
+
+# Miscellaneous
+*.tgz
+*.tar.gz
