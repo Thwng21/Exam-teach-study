@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Navigation from '@/components/Navigation'
+import AppLayout from '@/components/AppLayout'
 import Card from '@/components/Card'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
@@ -91,33 +91,27 @@ export default function StudentCoursesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navigation />
-        <div className="md:ml-64">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
+      <AppLayout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
         </div>
-      </div>
+      </AppLayout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
-      <div className="md:ml-64">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Khóa học của tôi</h1>
-                <p className="text-gray-600 mt-2">Quản lý và tham gia các khóa học</p>
-              </div>
+    <AppLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Khóa học của tôi</h1>
+              <p className="text-gray-600 mt-2">Quản lý và tham gia các khóa học</p>
             </div>
+          </div>
 
             {error && (
               <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
@@ -340,7 +334,6 @@ export default function StudentCoursesPage() {
             )
           )}
         </div>
-      </div>
-    </div>
+    </AppLayout>
   )
 }

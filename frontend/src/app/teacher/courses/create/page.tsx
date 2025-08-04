@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import Navigation from '@/components/Navigation'
+import AppLayout from '@/components/AppLayout'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
 import Card from '@/components/Card'
@@ -66,18 +66,14 @@ export default function CreateCoursePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
-      {/* Main content with proper margin for sidebar */}
-      <div className="md:ml-64">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <Link href="/teacher/courses" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Quay lại danh sách khóa học
-            </Link>
+    <AppLayout>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <Link href="/teacher/courses" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Quay lại danh sách khóa học
+          </Link>
             <div className="flex items-center gap-3 mb-2">
               <BookOpen className="w-8 h-8 text-blue-600" />
               <h1 className="text-3xl font-bold text-gray-900">Tạo khóa học mới</h1>
@@ -224,7 +220,6 @@ export default function CreateCoursePage() {
           </div>
         </form>
         </div>
-      </div>
-    </div>
+    </AppLayout>
   )
 }

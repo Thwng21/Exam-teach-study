@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import Navigation from '@/components/Navigation'
+import AppLayout from '@/components/AppLayout'
 import Card from '@/components/Card'
 import Button from '@/components/Button'
 import { 
@@ -75,54 +75,45 @@ export default function StudentCourseDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navigation />
-        <div className="md:ml-64">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
+      <AppLayout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
         </div>
-      </div>
+      </AppLayout>
     )
   }
 
   if (error || !course) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navigation />
-        <div className="md:ml-64">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <Card className="p-12 text-center">
-              <XCircle className="w-16 h-16 text-red-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Không thể tải khóa học</h3>
-              <p className="text-gray-600 mb-6">{error}</p>
-              <Link href="/student/courses">
-                <Button>Quay lại danh sách khóa học</Button>
-              </Link>
-            </Card>
-          </div>
+      <AppLayout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <Card className="p-12 text-center">
+            <XCircle className="w-16 h-16 text-red-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Không thể tải khóa học</h3>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <Link href="/student/courses">
+              <Button>Quay lại danh sách khóa học</Button>
+            </Link>
+          </Card>
         </div>
-      </div>
+      </AppLayout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
-      <div className="md:ml-64">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <Link href="/student/courses" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Quay lại danh sách khóa học
-            </Link>
-            
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
+    <AppLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <Link href="/student/courses" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Quay lại danh sách khóa học
+          </Link>
+          
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <BookOpen className="w-8 h-8 text-blue-600" />
                   <div>
@@ -291,7 +282,6 @@ export default function StudentCourseDetailPage() {
             </div>
           </div>
         </div>
-      </div>
-    </div>
+    </AppLayout>
   )
 }

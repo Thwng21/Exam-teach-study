@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Navigation from '@/components/Navigation'
+import AppLayout from '@/components/AppLayout'
 import Card from '@/components/Card'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
@@ -124,10 +124,8 @@ export default function TeacherExamsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation {...userInfo} />
-      
-      <main className="md:ml-64 p-6">
+    <AppLayout>
+      <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
@@ -249,7 +247,7 @@ export default function TeacherExamsPage() {
             </Card>
           )}
         </div>
-      </main>
+      </div>
 
       {/* Create Exam Modal */}
       {showCreateModal && (
@@ -265,14 +263,20 @@ export default function TeacherExamsPage() {
                   Mô tả
                 </label>
                 <textarea
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={3}
-                  placeholder="Mô tả chi tiết về bài kiểm tra..."
+                  placeholder="Nhập mô tả bài kiểm tra"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <Input type="number" label="Thời gian (phút)" placeholder="90" />
-                <Input type="number" label="Tổng điểm" placeholder="100" />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Khóa học
+                </label>
+                <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="">Chọn khóa học</option>
+                  <option value="cs101">CS101 - Lập trình Web</option>
+                  <option value="cs201">CS201 - Cơ sở dữ liệu</option>
+                </select>
               </div>
             </div>
             <div className="flex justify-end space-x-3 mt-6">
@@ -286,6 +290,6 @@ export default function TeacherExamsPage() {
           </div>
         </div>
       )}
-    </div>
+    </AppLayout>
   )
 }

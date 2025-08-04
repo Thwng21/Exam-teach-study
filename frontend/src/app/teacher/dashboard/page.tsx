@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import Navigation from '@/components/Navigation'
+import AppLayout from '@/components/AppLayout'
 import Card from '@/components/Card'
 import Button from '@/components/Button'
 import { 
@@ -152,10 +152,8 @@ export default function TeacherDashboard() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
-      <main className="md:ml-64 p-6">
+    <AppLayout>
+      <div className="p-6">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Chào mừng, {user?.firstName} {user?.lastName}!
@@ -278,7 +276,7 @@ export default function TeacherDashboard() {
             </div>
           </Card>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   )
 }

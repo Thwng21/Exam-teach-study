@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import Navigation from '@/components/Navigation'
+import AppLayout from '@/components/AppLayout'
 import Card from '@/components/Card'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
@@ -104,10 +104,8 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
-      <main className="md:ml-64 p-6">
+    <AppLayout>
+      <main className="p-6">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Quản lý tài khoản
@@ -271,6 +269,6 @@ export default function AdminUsersPage() {
           </div>
         )}
       </main>
-    </div>
+    </AppLayout>
   )
 }

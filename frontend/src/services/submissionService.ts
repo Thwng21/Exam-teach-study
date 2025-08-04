@@ -27,8 +27,14 @@ export interface Submission {
     points: number;
   }>;
   score: number;
+  totalPoints?: number;
+  percentage?: number;
+  timeSpent?: number;
+  startedAt?: string;
+  submittedAt?: string;
+  status?: string;
+  isLate?: boolean;
   feedback?: string;
-  submittedAt: string;
   gradedAt?: string;
   gradedBy?: string;
 }
@@ -67,6 +73,11 @@ class SubmissionService {
   async getExamSubmissions(examId: string): Promise<Submission[]> {
     const response = await api.get(`/submissions/exam/${examId}`);
     return response.data.submissions;
+  }
+
+  async submitExamAnswers(submissionId: string, answers: any[]): Promise<any> {
+    const response = await api.post(`/submissions/${submissionId}/submit`, { answers });
+    return response.data.submission;
   }
 }
 

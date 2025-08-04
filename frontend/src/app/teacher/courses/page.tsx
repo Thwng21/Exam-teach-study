@@ -1,45 +1,174 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import Navigation from '@/components/Navigation'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+import AppLayout from '@/components/AppLayout'
 import Card from '@/components/Card'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
 import { 
   Plus, 
+  X,
+  Trash2,
   Search,
   Users,
   BookOpen,
   Edit,
   Eye,
-  MoreVertical,
   Calendar,
-  FileText
+  FileText,
+  MoreVertical
 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
-import { courseService, Course } from '@/services/courseService'
+import { courseService, Course, CreateCourseData } from '@/services/courseService'
+
+interface CourseFormData {
+  name: string
+  code: string
+  description: string
+  isActive: boolean
+}
 
 export default function TeacherCoursesPage() {
+  const { user } = useAuth()
+  const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
   const [courses, setCourses] = useState<Course[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  
+  // Modal states
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  
+  // Form data
+  const [formData, setFormData] = useState<CourseFormData>({
+    name: '',
+    code: '',
+    description: '',
+    isActive: true
+  })
 
   useEffect(() => {
-    const loadCourses = async () => {
-      try {
-        const coursesData = await courseService.getMyCourses()
-        setCourses(coursesData)
-      } catch (err: any) {
-        setError(err.message || 'Không thể tải danh sách khóa học')
-      } finally {
-        setLoading(false)
-      }
-    }
-
     loadCourses()
   }, [])
+
+  const loadCourses = async () => {
+    try {
+      setLoading(true)
+      const coursesData = await courseService.getMyCourses()
+      setCourses(coursesData)
+    } catch (err: any) {
+      setError(err.message || 'Không thể tải danh sách khóa học')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      code: '',
+      description: '',
+      isActive: true
+    })
+  }
+
+  const handleCreateCourse = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+    
+    try {
+      const courseData: CreateCourseData = {
+        name: formData.name,
+        code: formData.code,
+        description: formData.description,
+        isActive: formData.isActive
+      }
+      
+      const newCourse = await courseService.createCourse(courseData)
+      setCourses(prev => [newCourse, ...prev])
+      setShowCreateModal(false)
+      resetForm()
+      setError('')
+    } catch (err: any) {
+      setError(err.message || 'Không thể tạo khóa học')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleEditCourse = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedCourse) return
+    
+    setSubmitting(true)
+    
+    try {
+      const courseData: CreateCourseData = {
+        name: formData.name,
+        code: formData.code,
+        description: formData.description,
+        isActive: formData.isActive
+      }
+      
+      const updatedCourse = await courseService.updateCourse(selectedCourse._id, courseData)
+      setCourses(prev => prev.map(course => 
+        course._id === selectedCourse._id ? updatedCourse : course
+      ))
+      setShowEditModal(false)
+      setSelectedCourse(null)
+      resetForm()
+      setError('')
+    } catch (err: any) {
+      setError(err.message || 'Không thể cập nhật khóa học')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleDeleteCourse = async () => {
+    if (!selectedCourse) return
+    
+    setSubmitting(true)
+    
+    try {
+      await courseService.deleteCourse(selectedCourse._id)
+      setCourses(prev => prev.filter(course => course._id !== selectedCourse._id))
+      setShowDeleteModal(false)
+      setSelectedCourse(null)
+      setError('')
+    } catch (err: any) {
+      setError(err.message || 'Không thể xóa khóa học')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const openCreateModal = () => {
+    resetForm()
+    setShowCreateModal(true)
+  }
+
+  const openEditModal = (course: Course) => {
+    setSelectedCourse(course)
+    setFormData({
+      name: course.name,
+      code: course.code,
+      description: course.description,
+      isActive: course.isActive
+    })
+    setShowEditModal(true)
+  }
+
+  const openDeleteModal = (course: Course) => {
+    setSelectedCourse(course)
+    setShowDeleteModal(true)
+  }
 
   const filteredCourses = courses.filter(course =>
     course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -48,38 +177,31 @@ export default function TeacherCoursesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navigation />
+      <AppLayout>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
         </div>
-      </div>
+      </AppLayout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
-      {/* Main content with proper margin for sidebar */}
-      <div className="md:ml-64">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Quản lý khóa học</h1>
-                <p className="text-gray-600 mt-2">Tạo và quản lý các khóa học của bạn</p>
-              </div>
-              <Link href="/teacher/courses/create">
-                <Button className="flex items-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  Tạo khóa học mới
-                </Button>
-              </Link>
+    <AppLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Quản lý khóa học</h1>
+              <p className="text-gray-600 mt-2">Tạo và quản lý các khóa học của bạn</p>
             </div>
+            <Button onClick={openCreateModal} className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              Tạo khóa học mới
+            </Button>
+          </div>
 
           {error && (
             <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
@@ -152,12 +274,10 @@ export default function TeacherCoursesPage() {
                 : 'Tạo khóa học đầu tiên của bạn để bắt đầu'}
             </p>
             {!searchTerm && (
-              <Link href="/teacher/courses/create">
-                <Button>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Tạo khóa học mới
-                </Button>
-              </Link>
+              <Button onClick={openCreateModal}>
+                <Plus className="w-4 h-4 mr-2" />
+                Tạo khóa học mới
+              </Button>
             )}
           </Card>
         ) : (
@@ -205,24 +325,253 @@ export default function TeacherCoursesPage() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Link href={`/teacher/courses/${course._id}`} className="flex-1">
-                    <Button variant="outline" size="sm" className="w-full">
-                      <Eye className="w-4 h-4 mr-2" />
-                      Xem chi tiết
-                    </Button>
-                  </Link>
-                  <Link href={`/teacher/courses/${course._id}/edit`}>
-                    <Button variant="outline" size="sm">
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                  </Link>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => router.push(`/teacher/courses/${course._id}`)}
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Xem chi tiết
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => openEditModal(course)}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => openDeleteModal(course)}
+                    className="text-red-600 hover:text-red-700 hover:border-red-300"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
               </Card>
             ))}
           </div>
         )}
+        
+        {/* Create Course Modal */}
+        {showCreateModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-md w-full p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-900">Tạo khóa học mới</h2>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  className="p-1 hover:bg-gray-100 rounded-full"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <form onSubmit={handleCreateCourse} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tên khóa học *
+                  </label>
+                  <Input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Nhập tên khóa học"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Mã khóa học *
+                  </label>
+                  <Input
+                    type="text"
+                    value={formData.code}
+                    onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
+                    placeholder="Ví dụ: CS101"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Mô tả
+                  </label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Mô tả về khóa học"
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="isActive"
+                    checked={formData.isActive}
+                    onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                    className="mr-2"
+                  />
+                  <label htmlFor="isActive" className="text-sm text-gray-700">
+                    Kích hoạt khóa học
+                  </label>
+                </div>
+                
+                <div className="flex justify-end space-x-3 pt-4">
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    onClick={() => setShowCreateModal(false)}
+                    disabled={submitting}
+                  >
+                    Hủy
+                  </Button>
+                  <Button type="submit" disabled={submitting}>
+                    {submitting ? 'Đang tạo...' : 'Tạo khóa học'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Course Modal */}
+        {showEditModal && selectedCourse && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-md w-full p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-900">Chỉnh sửa khóa học</h2>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="p-1 hover:bg-gray-100 rounded-full"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <form onSubmit={handleEditCourse} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tên khóa học *
+                  </label>
+                  <Input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Nhập tên khóa học"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Mã khóa học *
+                  </label>
+                  <Input
+                    type="text"
+                    value={formData.code}
+                    onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
+                    placeholder="Ví dụ: CS101"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Mô tả
+                  </label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Mô tả về khóa học"
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="editIsActive"
+                    checked={formData.isActive}
+                    onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                    className="mr-2"
+                  />
+                  <label htmlFor="editIsActive" className="text-sm text-gray-700">
+                    Kích hoạt khóa học
+                  </label>
+                </div>
+                
+                <div className="flex justify-end space-x-3 pt-4">
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    onClick={() => setShowEditModal(false)}
+                    disabled={submitting}
+                  >
+                    Hủy
+                  </Button>
+                  <Button type="submit" disabled={submitting}>
+                    {submitting ? 'Đang cập nhật...' : 'Cập nhật'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Course Modal */}
+        {showDeleteModal && selectedCourse && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-md w-full p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-900">Xóa khóa học</h2>
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="p-1 hover:bg-gray-100 rounded-full"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="mb-6">
+                <p className="text-gray-600 mb-4">
+                  Bạn có chắc chắn muốn xóa khóa học này không? Hành động này không thể hoàn tác.
+                </p>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <h3 className="font-medium text-red-900">{selectedCourse.name}</h3>
+                  <p className="text-sm text-red-700">Mã: {selectedCourse.code}</p>
+                  <p className="text-sm text-red-700">
+                    Số sinh viên: {selectedCourse.students?.length || 0}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={submitting}
+                >
+                  Hủy
+                </Button>
+                <Button 
+                  onClick={handleDeleteCourse}
+                  disabled={submitting}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {submitting ? 'Đang xóa...' : 'Xóa khóa học'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
         </div>
-      </div>
-    </div>
+    </AppLayout>
   )
 }

@@ -1,8 +1,13 @@
 'use client'
 
-import Navigation from '@/components/Navigation'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { useAuth } from '@/contexts/AuthContext'
+import AppLayout from '@/components/AppLayout'
 import Card from '@/components/Card'
 import Button from '@/components/Button'
+import { submissionService } from '@/services/submissionService'
+import type { Submission } from '@/services/submissionService'
 import { 
   TrendingUp, 
   TrendingDown,
@@ -14,70 +19,42 @@ import {
 } from 'lucide-react'
 import { formatDate, formatDuration } from '@/lib/utils'
 
-// Mock data
-const mockResults = [
-  {
-    id: '1',
-    examTitle: 'Kiểm tra giữa kỳ - Lập trình Web',
-    course: 'CS101',
-    score: 85,
-    totalPoints: 100,
-    timeSpent: 75, // minutes
-    submittedAt: '2025-08-01T10:30:00Z',
-    rank: 5,
-    totalStudents: 48,
-    status: 'graded'
-  },
-  {
-    id: '2',
-    examTitle: 'Quiz - JavaScript Cơ bản',
-    course: 'CS101',
-    score: 45,
-    totalPoints: 50,
-    timeSpent: 25,
-    submittedAt: '2025-07-28T14:15:00Z',
-    rank: 12,
-    totalStudents: 48,
-    status: 'graded'
-  },
-  {
-    id: '3',
-    examTitle: 'Bài tập - HTML/CSS',
-    course: 'CS101',
-    score: 38,
-    totalPoints: 40,
-    timeSpent: 45,
-    submittedAt: '2025-07-25T16:45:00Z',
-    rank: 8,
-    totalStudents: 45,
-    status: 'graded'
-  },
-  {
-    id: '4',
-    examTitle: 'Thực hành SQL',
-    course: 'CS201',
-    score: 0,
-    totalPoints: 75,
-    timeSpent: 60,
-    submittedAt: '2025-08-02T11:20:00Z',
-    rank: 0,
-    totalStudents: 40,
-    status: 'pending'
-  }
-]
-
-const stats = {
-  totalExams: 12,
-  averageScore: 82.5,
-  bestScore: 95,
-  totalTimeSpent: 420 // minutes
-}
-
 export default function StudentResultsPage() {
-  const userInfo = {
-    userRole: 'student' as const,
-    userName: 'Nguyễn Văn An',
-    userEmail: 'student@university.edu.vn'
+  const { user } = useAuth()
+  const [submissions, setSubmissions] = useState<Submission[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (user) {
+      loadSubmissions()
+    }
+  }, [user])
+
+  const loadSubmissions = async () => {
+    try {
+      setLoading(true)
+      const data = await submissionService.getSubmissions()
+      console.log('Loaded submissions:', data)
+      setSubmissions(data)
+    } catch (err) {
+      console.error('Error loading submissions:', err)
+      setError('Không thể tải danh sách kết quả')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Calculate statistics from real submissions
+  const stats = {
+    totalExams: submissions.length,
+    averageScore: submissions.length > 0 
+      ? Math.round(submissions.reduce((sum, sub) => sum + sub.score, 0) / submissions.length)
+      : 0,
+    bestScore: submissions.length > 0 
+      ? Math.max(...submissions.map(sub => sub.score))
+      : 0,
+    totalTime: submissions.reduce((sum, sub) => sum + (sub.timeSpent || 0), 0)
   }
 
   const getScoreColor = (score: number, total: number) => {
@@ -101,10 +78,8 @@ export default function StudentResultsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation {...userInfo} />
-      
-      <main className="md:ml-64 p-6">
+    <AppLayout>
+      <main className="p-6">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Kết quả học tập
@@ -156,7 +131,7 @@ export default function StudentResultsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Tổng thời gian</p>
-                <p className="text-2xl font-bold text-gray-900">{formatDuration(stats.totalTimeSpent)}</p>
+                <p className="text-2xl font-bold text-gray-900">{formatDuration(stats.totalTime)}</p>
               </div>
               <div className="p-3 rounded-full bg-purple-100">
                 <Clock size={24} className="text-purple-600" />
@@ -168,16 +143,26 @@ export default function StudentResultsPage() {
         {/* Results List */}
         <Card title="Lịch sử bài kiểm tra">
           <div className="space-y-4">
-            {mockResults.map((result) => (
-              <div key={result.id} className={`p-4 border rounded-lg ${getScoreBgColor(result.score, result.totalPoints)}`}>
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Đang tải kết quả...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-8">
+                <p className="text-red-600 mb-4">{error}</p>
+                <Button onClick={loadSubmissions}>Thử lại</Button>
+              </div>
+            ) : submissions.map((submission) => (
+              <div key={submission._id} className={`p-4 border rounded-lg ${getScoreBgColor(submission.score, submission.exam?.maxScore || 100)}`}>
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="font-semibold text-gray-900">{result.examTitle}</h3>
+                      <h3 className="font-semibold text-gray-900">{submission.exam?.title || 'Bài thi'}</h3>
                       <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">
-                        {result.course}
+                        {submission.exam?.course?.code || 'N/A'}
                       </span>
-                      {result.status === 'pending' && (
+                      {submission.status !== 'completed' && (
                         <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700">
                           Chờ chấm điểm
                         </span>
@@ -187,29 +172,29 @@ export default function StudentResultsPage() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
                       <div className="flex items-center space-x-1">
                         <Calendar size={14} />
-                        <span>{formatDate(result.submittedAt)}</span>
+                        <span>{submission.submittedAt ? formatDate(submission.submittedAt) : 'Chưa nộp'}</span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <Clock size={14} />
-                        <span>{formatDuration(result.timeSpent)}</span>
+                        <span>{formatDuration(submission.timeSpent || 0)}</span>
                       </div>
-                      {result.status === 'graded' && result.rank > 0 && (
+                      {submission.status === 'completed' && submission.percentage && (
                         <div className="flex items-center space-x-1">
-                          {getRankIcon(result.rank, result.totalStudents)}
-                          <span>Hạng {result.rank}/{result.totalStudents}</span>
+                          {getRankIcon(1, 10)}
+                          <span>Điểm {submission.percentage}%</span>
                         </div>
                       )}
                     </div>
                   </div>
 
                   <div className="flex items-center space-x-4">
-                    {result.status === 'graded' ? (
+                    {submission.status === 'completed' ? (
                       <div className="text-right">
-                        <p className={`text-xl font-bold ${getScoreColor(result.score, result.totalPoints)}`}>
-                          {result.score}/{result.totalPoints}
+                        <p className={`text-xl font-bold ${getScoreColor(submission.score, submission.exam?.maxScore || 100)}`}>
+                          {submission.score}/{submission.exam?.maxScore || 100}
                         </p>
                         <p className="text-sm text-gray-600">
-                          {Math.round((result.score / result.totalPoints) * 100)}%
+                          {submission.percentage || Math.round((submission.score / (submission.exam?.maxScore || 100)) * 100)}%
                         </p>
                       </div>
                     ) : (
@@ -220,11 +205,13 @@ export default function StudentResultsPage() {
                     )}
                     
                     <div className="flex space-x-2">
-                      <Button size="sm" variant="outline">
-                        <Eye size={14} className="mr-1" />
-                        Xem chi tiết
-                      </Button>
-                      {result.status === 'graded' && (
+                      <Link href={`/student/results/${submission._id}`}>
+                        <Button size="sm" variant="outline">
+                          <Eye size={14} className="mr-1" />
+                          Xem chi tiết
+                        </Button>
+                      </Link>
+                      {submission.status === 'completed' && (
                         <Button size="sm" variant="outline">
                           <Download size={14} className="mr-1" />
                           Tải xuống
@@ -236,7 +223,7 @@ export default function StudentResultsPage() {
               </div>
             ))}
 
-            {mockResults.length === 0 && (
+            {!loading && !error && submissions.length === 0 && (
               <div className="text-center py-12">
                 <Medal size={48} className="mx-auto mb-4 text-gray-400" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -250,6 +237,6 @@ export default function StudentResultsPage() {
           </div>
         </Card>
       </main>
-    </div>
+    </AppLayout>
   )
 }

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { apiService } from '@/lib/api'
-import Navigation from '@/components/Navigation'
+import AppLayout from '@/components/AppLayout'
 import Card from '@/components/Card'
 import Button from '@/components/Button'
 import { 
@@ -291,10 +291,9 @@ export default function ExamTakingPage() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navigation />
-        <main className="md:ml-64 p-6">
-          <div className="max-w-2xl mx-auto">
+      <AppLayout showSidebar={false}>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="max-w-2xl mx-auto p-6">
             <Card>
               <div className="text-center py-12">
                 <CheckCircle size={64} className="mx-auto mb-4 text-green-500" />
@@ -324,23 +323,38 @@ export default function ExamTakingPage() {
               </div>
             </Card>
           </div>
-        </main>
-      </div>
+        </div>
+      </AppLayout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
-      <main className="md:ml-64 p-6">
-        {/* Exam Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
+    <AppLayout showSidebar={false}>
+      {/* Header with back button only */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => window.location.href = '/student/courses'}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Trở về danh sách
+            </button>
+            <div className="text-center">
               <h1 className="text-xl font-bold text-gray-900">{mockExam.title}</h1>
               <p className="text-gray-600">{mockExam.course}</p>
             </div>
+            <div></div> {/* Spacer for centering */}
+          </div>
+        </div>
+      </div>
+
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Exam Header */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div></div>
             <div className="flex items-center space-x-4">
               <div className={`flex items-center space-x-2 px-4 py-2 rounded-lg ${
                 timeLeft < 300 ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
@@ -469,6 +483,6 @@ export default function ExamTakingPage() {
           </div>
         </div>
       </main>
-    </div>
+    </AppLayout>
   )
 }

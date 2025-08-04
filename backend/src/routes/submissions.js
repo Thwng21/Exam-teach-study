@@ -9,7 +9,9 @@ const {
   getSubmissions,
   getSubmission,
   gradeSubmission,
-  getExamSubmissions
+  getExamSubmissions,
+  startExam,
+  submitExamAnswers
 } = require('../controllers/submissionController');
 
 const router = express.Router();
@@ -33,6 +35,9 @@ router.route('/:id')
   .get(protect, getSubmission);
 
 router.put('/:id/grade', protect, authorize('teacher', 'admin'), gradeSubmission);
+
+// Submit answers for a specific submission
+router.post('/:submissionId/submit', protect, authorize('student'), submitExamAnswers);
 
 // Get submissions for specific exam
 router.get('/exam/:examId', protect, authorize('teacher', 'admin'), getExamSubmissions);

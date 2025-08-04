@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import AppLayout from '@/components/AppLayout'
 import Button from '@/components/Button'
 import Card from '@/components/Card'
 import { examService, type Exam } from '@/services/examService'
@@ -31,6 +32,7 @@ export default function StudentExamsPage() {
   }
 
   const isExamAvailable = (exam: Exam) => {
+    if (!exam.startTime || !exam.endTime) return false
     const now = new Date()
     const startTime = new Date(exam.startTime)
     const endTime = new Date(exam.endTime)
@@ -38,28 +40,32 @@ export default function StudentExamsPage() {
   }
 
   const getExamStatus = (exam: Exam) => {
+    if (!exam.isActive) return { text: 'Không hoạt động', color: 'gray' }
+    if (!exam.startTime || !exam.endTime) return { text: 'Chưa lên lịch', color: 'gray' }
+    
     const now = new Date()
     const startTime = new Date(exam.startTime)
     const endTime = new Date(exam.endTime)
 
-    if (!exam.isActive) return { text: 'Không hoạt động', color: 'gray' }
     if (now < startTime) return { text: 'Chưa bắt đầu', color: 'yellow' }
     if (now > endTime) return { text: 'Đã kết thúc', color: 'red' }
     return { text: 'Đang diễn ra', color: 'green' }
   }
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600">Đang tải dữ liệu...</p>
+    <AppLayout>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Đang tải dữ liệu...</p>
+        </div>
       </div>
-    </div>
+    </AppLayout>
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <AppLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Bài thi khả dụng</h1>
           <p className="mt-2 text-gray-600">Danh sách các bài thi bạn có thể tham gia</p>
@@ -110,7 +116,7 @@ export default function StudentExamsPage() {
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center text-sm text-gray-600">
                         <BookOpen className="w-4 h-4 mr-2" />
-                        {exam.course.name} ({exam.course.code})
+                        {exam.course?.name || 'Không có khóa học'} ({exam.course?.code || 'N/A'})
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <Clock className="w-4 h-4 mr-2" />
@@ -118,11 +124,11 @@ export default function StudentExamsPage() {
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <Users className="w-4 h-4 mr-2" />
-                        {exam.questions.length} câu hỏi
+                        {exam.questions?.length || 0} câu hỏi
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <Calendar className="w-4 h-4 mr-2" />
-                        {new Date(exam.startTime).toLocaleDateString('vi-VN')} - {new Date(exam.endTime).toLocaleDateString('vi-VN')}
+                        {exam.startTime ? new Date(exam.startTime).toLocaleDateString('vi-VN') : 'TBA'} - {exam.endTime ? new Date(exam.endTime).toLocaleDateString('vi-VN') : 'TBA'}
                       </div>
                     </div>
 
@@ -152,6 +158,6 @@ export default function StudentExamsPage() {
           </div>
         )}
       </div>
-    </div>
+    </AppLayout>
   )
 }

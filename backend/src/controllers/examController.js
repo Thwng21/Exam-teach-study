@@ -37,13 +37,13 @@ exports.createExam = asyncHandler(async (req, res) => {
 exports.getExams = asyncHandler(async (req, res) => {
   let query = {};
 
-  // If student, only show active exams they can take
+  // If student, show all active exams (simplified for now)
   if (req.user.role === 'student') {
     query = {
-      isActive: true,
-      startTime: { $lte: new Date() },
-      endTime: { $gte: new Date() }
+      status: { $in: ['active', 'published'] }
     };
+    
+    console.log('Query for student exams (simplified):', query);
   }
   
   // If teacher, only show their exams
@@ -55,6 +55,9 @@ exports.getExams = asyncHandler(async (req, res) => {
     .populate('course', 'name code')
     .populate('teacher', 'firstName lastName')
     .sort({ createdAt: -1 });
+
+  console.log('Found exams:', exams.length);
+  console.log('Exams data:', exams);
 
   res.status(200).json({
     success: true,

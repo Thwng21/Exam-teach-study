@@ -54,7 +54,12 @@ const courseSchema = new mongoose.Schema({
 
 // Virtual for student count
 courseSchema.virtual('studentCount').get(function() {
-  return this.students.length;
+  return Array.isArray(this.students) ? this.students.length : 0;
+});
+
+// Virtual for isActive (compatibility)
+courseSchema.virtual('isActive').get(function() {
+  return this.status === 'active';
 });
 
 // Virtual for exams

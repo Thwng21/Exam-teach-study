@@ -94,6 +94,12 @@ exports.createCourse = asyncHandler(async (req, res) => {
   // Add teacher to req.body
   req.body.teacher = req.user._id;
 
+  // Convert isActive to status for compatibility
+  if (req.body.isActive !== undefined) {
+    req.body.status = req.body.isActive ? 'active' : 'draft';
+    delete req.body.isActive;
+  }
+
   const course = await Course.create(req.body);
 
   // Populate teacher info
@@ -127,6 +133,12 @@ exports.updateCourse = asyncHandler(async (req, res) => {
       success: false,
       message: 'Bạn không có quyền chỉnh sửa khóa học này'
     });
+  }
+
+  // Convert isActive to status for compatibility
+  if (req.body.isActive !== undefined) {
+    req.body.status = req.body.isActive ? 'active' : 'draft';
+    delete req.body.isActive;
   }
 
   course = await Course.findByIdAndUpdate(req.params.id, req.body, {

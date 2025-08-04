@@ -122,6 +122,11 @@ examSchema.virtual('submissionCount', {
   count: true
 });
 
+// Virtual for isActive (compatibility with frontend)
+examSchema.virtual('isActive').get(function() {
+  return this.status === 'active' || this.status === 'published';
+});
+
 // Index for better performance
 examSchema.index({ course: 1, status: 1 });
 examSchema.index({ teacher: 1, status: 1 });

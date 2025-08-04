@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import Button from '@/components/Button'
 import Input from '@/components/Input'
 import Card from '@/components/Card'
+import AppLayout from '@/components/AppLayout'
 import { User, Lock, AlertCircle, UserCheck, GraduationCap } from 'lucide-react'
 
 export default function LoginPage() {
@@ -100,16 +101,17 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Hệ thống Thi trực tuyến
-          </h1>
-          <p className="text-gray-600">
-            Đăng nhập để tiếp tục
-          </p>
-        </div>
+    <AppLayout showSidebar={false}>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Hệ thống Thi trực tuyến
+            </h1>
+            <p className="text-gray-600">
+              Đăng nhập để tiếp tục
+            </p>
+          </div>
 
         <Card>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -191,6 +193,7 @@ export default function LoginPage() {
           </div>
         </Card>
       </div>
-    </div>
+      </div>
+    </AppLayout>
   )
 }

@@ -12,6 +12,8 @@ const {
   getExamStats
 } = require('../controllers/examController');
 
+const { startExam } = require('../controllers/submissionController');
+
 const router = express.Router();
 
 // Validation rules
@@ -44,6 +46,9 @@ router.route('/:id')
   .get(protect, getExam)
   .put(protect, authorize('teacher', 'admin'), updateExam)
   .delete(protect, authorize('teacher', 'admin'), deleteExam);
+
+// Take exam endpoint
+router.get('/:id/take', protect, authorize('student'), startExam);
 
 router.get('/:id/stats', protect, authorize('teacher', 'admin'), getExamStats);
 

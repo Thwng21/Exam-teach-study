@@ -194,7 +194,9 @@ export default function CreateExamPage() {
     try {
       dispatch({ type: 'SET_LOADING_COURSES', payload: true })
       const data = await courseService.getMyCourses()
-      dispatch({ type: 'SET_COURSES', payload: data })
+      // Đảm bảo data là array, nếu không thì dùng array rỗng
+      const coursesArray = Array.isArray(data) ? data : []
+      dispatch({ type: 'SET_COURSES', payload: coursesArray })
     } catch (err: any) {
       console.error('Error loading courses:', err)
       dispatch({ type: 'SET_ERROR', payload: 'Không thể tải danh sách khóa học: ' + err.message })
@@ -315,7 +317,7 @@ export default function CreateExamPage() {
                     required
                   >
                     <option value="">Chọn khóa học</option>
-                    {state.courses.map((course) => (
+                    {Array.isArray(state.courses) && state.courses.map((course) => (
                       <option key={course._id} value={course._id}>
                         {course.name} ({course.code})
                       </option>
