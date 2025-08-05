@@ -26,17 +26,18 @@ export default function AdminCourses() {
   const filteredCourses = courses.filter(course => {
     switch (filter) {
       case 'active':
-        return course.isActive;
+        return course.status === 'published';
       case 'inactive':
-        return !course.isActive;
+        return course.status === 'draft';
       default:
         return true;
     }
   });
 
-  const toggleCourseStatus = async (courseId: string, isActive: boolean) => {
+  const toggleCourseStatus = async (courseId: string, currentStatus: string) => {
     try {
-      await courseService.updateCourse(courseId, { isActive: !isActive });
+      const newStatus = currentStatus === 'published' ? 'draft' : 'published';
+      await courseService.updateCourse(courseId, { status: newStatus });
       await fetchCourses();
     } catch (error) {
       console.error('Lỗi cập nhật trạng thái khóa học:', error);
@@ -115,18 +116,18 @@ export default function AdminCourses() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {course.teacher?.firstName} {course.teacher?.lastName}
+                    {course.teacher?.name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {course.students?.length || 0}
+                    {course.classes?.length || 0}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      course.isActive
+                      course.status === 'published'
                         ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
                     }`}>
-                      {course.isActive ? 'Hoạt động' : 'Ngừng hoạt động'}
+                      {course.status === 'published' ? 'Hoạt động' : 'Ngừng hoạt động'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -134,14 +135,14 @@ export default function AdminCourses() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      onClick={() => toggleCourseStatus(course._id, course.isActive)}
+                      onClick={() => toggleCourseStatus(course._id, course.status)}
                       className={`px-3 py-1 rounded text-xs font-medium ${
-                        course.isActive
+                        course.status === 'published'
                           ? 'bg-red-100 text-red-800 hover:bg-red-200'
                           : 'bg-green-100 text-green-800 hover:bg-green-200'
                       }`}
                     >
-                      {course.isActive ? 'Tắt' : 'Bật'}
+                      {course.status === 'published' ? 'Tắt' : 'Bật'}
                     </button>
                   </td>
                 </tr>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { courseService } from '@/services/courseService';
 import { examService } from '@/services/examService';
+import AppLayout from '@/components/AppLayout';
 
 interface AdminStats {
   totalUsers: number;
@@ -73,14 +74,16 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+      <AppLayout>
+        <div className="flex justify-center items-center min-h-96">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="p-6">
+    <AppLayout>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
           Bảng Điều Khiển Admin
@@ -223,6 +226,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
-    </div>
+    </AppLayout>
   );
 }

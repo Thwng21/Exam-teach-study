@@ -6,7 +6,7 @@ const connectDB = require('./config/database');
 const { errorHandler, notFound, generalLimiter } = require('./middleware/error');
 
 // Load env vars
-dotenv.config({ path: 'd:/MyProduct/Exam/backend/.env' });
+dotenv.config();
 
 // Connect to database
 connectDB();
@@ -35,6 +35,8 @@ app.use('/uploads', express.static('uploads'));
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/courses', require('./routes/courses'));
+app.use('/api/classes', require('./routes/classes'));
+app.use('/api/academic', require('./routes/academic'));
 app.use('/api/exams', require('./routes/exams'));
 app.use('/api/submissions', require('./routes/submissions'));
 app.use('/api/admin', require('./routes/admin'));

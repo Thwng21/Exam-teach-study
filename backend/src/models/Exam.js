@@ -54,6 +54,11 @@ const examSchema = new mongoose.Schema({
     ref: 'Course',
     required: [true, 'Bài kiểm tra phải thuộc về một khóa học']
   },
+  class: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Class',
+    required: [true, 'Bài kiểm tra phải thuộc về một lớp học']
+  },
   teacher: {
     type: mongoose.Schema.ObjectId,
     ref: 'User',

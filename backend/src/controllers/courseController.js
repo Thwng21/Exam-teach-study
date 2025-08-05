@@ -1,26 +1,76 @@
 const Course = require('../models/Course');
+const Class = require('../models/Class');
 const User = require('../models/User');
 const { asyncHandler } = require('../middleware/error');
+
+// @desc    Get all courses for debugging
+// @route   GET /api/courses/debug
+// @access  Private
+exports.getCoursesDebug = asyncHandler(async (req, res) => {
+  console.log('getCoursesDebug called')
+  
+  const courses = await Course.find({})
+    .populate('teacher', 'name email')
+    .sort({ createdAt: -1 });
+
+  console.log('All courses in database:', courses.map(c => ({ 
+    id: c._id, 
+    name: c.name, 
+    code: c.code, 
+    academicYear: c.academicYear, 
+    semester: c.semester,
+    teacher: c.teacher?.name,
+    createdAt: c.createdAt
+  })))
+
+  res.status(200).json({
+    success: true,
+    count: courses.length,
+    data: {
+      courses
+    }
+  });
+});
 
 // @desc    Get all courses
 // @route   GET /api/courses
 // @access  Private
 exports.getCourses = asyncHandler(async (req, res) => {
+  console.log('getCourses called with query params:', req.query)
   let query = {};
+
+  // Filter theo năm học và học kỳ
+  if (req.query.academicYear) {
+    query.academicYear = req.query.academicYear;
+    console.log('Filtering by academicYear:', req.query.academicYear)
+  }
+  if (req.query.semester) {
+    query.semester = req.query.semester;
+    console.log('Filtering by semester:', req.query.semester)
+  }
 
   // If user is teacher, only show their courses
   if (req.user.role === 'teacher') {
     query.teacher = req.user._id;
-  }
-  // If user is student, only show enrolled courses
-  else if (req.user.role === 'student') {
-    query.students = req.user._id;
+    console.log('Filtering by teacher:', req.user._id)
   }
 
+  console.log('Final query:', query)
+
   const courses = await Course.find(query)
-    .populate('teacher', 'name email')
-    .populate('students', 'name email')
-    .sort({ createdAt: -1 });
+    .populate('teacher', 'firstName lastName name email')
+    .populate('classes', 'name code maxStudents studentCount status schedule')
+    .sort({ academicYear: -1, semester: 1, code: 1 });
+
+  console.log('Found courses:', courses.length)
+  console.log('Courses data:', courses.map(c => ({ 
+    id: c._id, 
+    name: c.name, 
+    code: c.code, 
+    academicYear: c.academicYear, 
+    semester: c.semester,
+    teacher: c.teacher?._id 
+  })))
 
   res.status(200).json({
     success: true,
@@ -35,11 +85,22 @@ exports.getCourses = asyncHandler(async (req, res) => {
 // @route   GET /api/courses/available
 // @access  Private
 exports.getAllAvailableCourses = asyncHandler(async (req, res) => {
+  const { academicYear, semester } = req.query;
+  
+  let query = { status: 'active' };
+  
+  if (academicYear) {
+    query.academicYear = academicYear;
+  }
+  if (semester) {
+    query.semester = semester;
+  }
+
   // Get all active courses
-  const courses = await Course.find({ status: 'active' })
+  const courses = await Course.find(query)
     .populate('teacher', 'firstName lastName name email')
-    .populate('students', 'firstName lastName name email')
-    .sort({ createdAt: -1 });
+    .populate('classes', 'name code maxStudents studentCount status schedule')
+    .sort({ code: 1 });
 
   res.status(200).json({
     success: true,
@@ -56,7 +117,7 @@ exports.getAllAvailableCourses = asyncHandler(async (req, res) => {
 exports.getCourse = asyncHandler(async (req, res) => {
   const course = await Course.findById(req.params.id)
     .populate('teacher', 'name email')
-    .populate('students', 'name email')
+    .populate('classes', 'name code maxStudents studentCount status schedule')
     .populate('exams');
 
   if (!course) {
@@ -91,6 +152,9 @@ exports.getCourse = asyncHandler(async (req, res) => {
 // @route   POST /api/courses
 // @access  Private (Teacher, Admin)
 exports.createCourse = asyncHandler(async (req, res) => {
+  console.log('Creating course with data:', req.body)
+  console.log('User:', { id: req.user._id, role: req.user.role })
+  
   // Add teacher to req.body
   req.body.teacher = req.user._id;
 
@@ -101,6 +165,7 @@ exports.createCourse = asyncHandler(async (req, res) => {
   }
 
   const course = await Course.create(req.body);
+  console.log('Course created successfully:', course)
 
   // Populate teacher info
   await course.populate('teacher', 'name email');
@@ -186,91 +251,23 @@ exports.deleteCourse = asyncHandler(async (req, res) => {
 
 // @desc    Enroll student in course
 // @route   POST /api/courses/:id/enroll
+// @desc    Enroll student in course (Deprecated - Sử dụng class enrollment thay thế)
+// @route   POST /api/courses/:id/enroll
 // @access  Private (Student)
 exports.enrollCourse = asyncHandler(async (req, res) => {
-  const course = await Course.findById(req.params.id);
-
-  if (!course) {
-    return res.status(404).json({
-      success: false,
-      message: 'Không tìm thấy khóa học'
-    });
-  }
-
-  // Check if course is active
-  if (course.status !== 'active') {
-    return res.status(400).json({
-      success: false,
-      message: 'Khóa học chưa được kích hoạt'
-    });
-  }
-
-  // Check if already enrolled
-  if (course.students.includes(req.user._id)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Bạn đã đăng ký khóa học này'
-    });
-  }
-
-  // Check max students limit
-  if (course.students.length >= course.maxStudents) {
-    return res.status(400).json({
-      success: false,
-      message: 'Khóa học đã đầy'
-    });
-  }
-
-  // Add student to course
-  course.students.push(req.user._id);
-  await course.save();
-
-  // Add course to user's courses
-  await User.findByIdAndUpdate(req.user._id, {
-    $addToSet: { courses: course._id }
-  });
-
-  res.status(200).json({
-    success: true,
-    message: 'Đăng ký khóa học thành công'
+  return res.status(400).json({
+    success: false,
+    message: 'API này đã không còn được sử dụng. Vui lòng đăng ký trực tiếp vào lớp học thông qua /api/classes/:id/enroll'
   });
 });
 
-// @desc    Unenroll student from course
+// @desc    Unenroll student from course (Deprecated - Sử dụng class unenrollment thay thế)
 // @route   DELETE /api/courses/:id/enroll
 // @access  Private (Student)
 exports.unenrollCourse = asyncHandler(async (req, res) => {
-  const course = await Course.findById(req.params.id);
-
-  if (!course) {
-    return res.status(404).json({
-      success: false,
-      message: 'Không tìm thấy khóa học'
-    });
-  }
-
-  // Check if enrolled
-  if (!course.students.includes(req.user._id)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Bạn chưa đăng ký khóa học này'
-    });
-  }
-
-  // Remove student from course
-  course.students = course.students.filter(
-    student => student.toString() !== req.user._id.toString()
-  );
-  await course.save();
-
-  // Remove course from user's courses
-  await User.findByIdAndUpdate(req.user._id, {
-    $pull: { courses: course._id }
-  });
-
-  res.status(200).json({
-    success: true,
-    message: 'Hủy đăng ký khóa học thành công'
+  return res.status(400).json({
+    success: false,
+    message: 'API này đã không còn được sử dụng. Vui lòng hủy đăng ký trực tiếp khỏi lớp học thông qua /api/classes/:id/unenroll'
   });
 });
 
@@ -278,8 +275,7 @@ exports.unenrollCourse = asyncHandler(async (req, res) => {
 // @route   GET /api/courses/:id/students
 // @access  Private (Course owner, Admin)
 exports.getCourseStudents = asyncHandler(async (req, res) => {
-  const course = await Course.findById(req.params.id)
-    .populate('students', 'name email lastLogin createdAt');
+  const course = await Course.findById(req.params.id);
 
   if (!course) {
     return res.status(404).json({
@@ -296,9 +292,106 @@ exports.getCourseStudents = asyncHandler(async (req, res) => {
     });
   }
 
+  // Lấy tất cả lớp học của khóa học này
+  const classes = await Class.find({ course: req.params.id })
+    .populate('students', 'name email lastLogin createdAt')
+    .sort({ code: 1 });
+
+  // Tổng hợp tất cả sinh viên từ các lớp học
+  const allStudents = [];
+  const studentIds = new Set();
+
+  classes.forEach(cls => {
+    cls.students.forEach(student => {
+      if (!studentIds.has(student._id.toString())) {
+        studentIds.add(student._id.toString());
+        allStudents.push({
+          ...student.toObject(),
+          className: cls.name,
+          classCode: cls.code
+        });
+      }
+    });
+  });
+
   res.status(200).json({
     success: true,
-    count: course.students.length,
-    data: course.students
+    count: allStudents.length,
+    data: {
+      students: allStudents,
+      classes: classes.map(cls => ({
+        _id: cls._id,
+        name: cls.name,
+        code: cls.code,
+        studentCount: cls.studentCount,
+        maxStudents: cls.maxStudents
+      }))
+    }
+  });
+});
+
+// @desc    Get academic years
+// @route   GET /api/courses/academic-years
+// @access  Public
+exports.getAcademicYears = asyncHandler(async (req, res) => {
+  const academicYears = await Course.distinct('academicYear');
+  
+  // Sắp xếp theo năm giảm dần
+  academicYears.sort((a, b) => b.localeCompare(a));
+
+  res.status(200).json({
+    success: true,
+    data: academicYears
+  });
+});
+
+// @desc    Get semesters by academic year
+// @route   GET /api/courses/semesters
+// @access  Public
+exports.getSemesters = asyncHandler(async (req, res) => {
+  const query = {};
+  
+  if (req.query.academicYear) {
+    query.academicYear = req.query.academicYear;
+  }
+  
+  const semesters = await Course.distinct('semester', query);
+  
+  // Sắp xếp theo thứ tự HK1, HK2, HK_HE
+  const semesterOrder = { 'HK1': 1, 'HK2': 2, 'HK_HE': 3 };
+  semesters.sort((a, b) => semesterOrder[a] - semesterOrder[b]);
+
+  res.status(200).json({
+    success: true,
+    data: semesters
+  });
+});
+
+// @desc    Get courses by academic year and semester (for students)
+// @route   GET /api/courses/by-semester
+// @access  Public
+exports.getCoursesBySemester = asyncHandler(async (req, res) => {
+  const { academicYear, semester } = req.query;
+
+  if (!academicYear || !semester) {
+    return res.status(400).json({
+      success: false,
+      message: 'Vui lòng cung cấp năm học và học kỳ'
+    });
+  }
+
+  const courses = await Course.find({
+    academicYear,
+    semester,
+    status: 'active'
+  })
+    .populate('teacher', 'name email')
+    .populate('classes', 'name code maxStudents studentCount status schedule')
+    .sort({ code: 1 });
+
+  res.status(200).json({
+    success: true,
+    count: courses.length,
+    data: courses
   });
 });

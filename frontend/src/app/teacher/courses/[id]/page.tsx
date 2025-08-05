@@ -34,6 +34,7 @@ import {
   User
 } from 'lucide-react'
 import { courseService, Course } from '@/services/courseService'
+import { classService, Class } from '@/services/classService'
 import { lessonService, Lesson } from '@/services/lessonService'
 import { materialService, Material } from '@/services/materialService'
 import { scheduleService, Schedule } from '@/services/scheduleService'
@@ -89,7 +90,12 @@ export default function CourseDetailPage() {
   const [studentsLoading, setStudentsLoading] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState<'overview' | 'lessons' | 'students' | 'schedule' | 'materials' | 'attendance'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'lessons' | 'students' | 'schedule' | 'materials' | 'attendance' | 'classes'>('overview')
+  
+  // Classes state
+  const [classes, setClasses] = useState<Class[]>([])
+  const [showCreateClassModal, setShowCreateClassModal] = useState(false)
+  const [classesLoading, setClassesLoading] = useState(false)
   
   // Modal states
   const [showEditCourse, setShowEditCourse] = useState(false)
@@ -140,7 +146,7 @@ export default function CourseDetailPage() {
       const courseData = await courseService.getCourse(id as string)
       setCourse(courseData)
       console.log('Course data loaded:', courseData)
-      console.log('Course students:', courseData.students)
+      console.log('Course classes:', courseData.classes)
       setCourseFormData({
         name: courseData.name,
         description: courseData.description || ''
@@ -409,6 +415,51 @@ export default function CourseDetailPage() {
     }
   }
 
+  // Classes management functions
+  const loadClasses = async () => {
+    try {
+      setClassesLoading(true)
+      const classesData = await classService.getClassesByCourse(id as string)
+      setClasses(classesData)
+    } catch (error) {
+      console.error('Error loading classes:', error)
+      setError('Không thể tải danh sách lớp học')
+    } finally {
+      setClassesLoading(false)
+    }
+  }
+
+  const handleCreateClass = async (classData: {
+    name: string
+    code: string
+    maxStudents: number
+    schedule: {
+      dayOfWeek: number
+      startTime: string
+      endTime: string
+      room: string
+    }[]
+  }) => {
+    try {
+      await classService.createClass({
+        ...classData,
+        course: id as string
+      })
+      await loadClasses()
+      setShowCreateClassModal(false)
+    } catch (error) {
+      console.error('Error creating class:', error)
+      setError('Không thể tạo lớp học')
+    }
+  }
+
+  // Load classes when switching to classes tab
+  useEffect(() => {
+    if (activeTab === 'classes' && id) {
+      loadClasses()
+    }
+  }, [activeTab, id])
+
   if (loading) {
     return (
       <AppLayout>
@@ -482,6 +533,7 @@ export default function CourseDetailPage() {
             {[
               { id: 'overview', label: 'Tổng quan', icon: Eye },
               { id: 'lessons', label: 'Bài học', icon: BookOpen },
+              { id: 'classes', label: 'Lớp học', icon: Users2 },
               { id: 'students', label: 'Sinh viên', icon: Users },
               { id: 'schedule', label: 'Lịch học', icon: Calendar },
               { id: 'materials', label: 'Tài liệu', icon: FileText },
@@ -513,7 +565,7 @@ export default function CourseDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card className="p-6 text-center">
                 <Users className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                <p className="text-3xl font-bold text-gray-900">{course.students?.length || 0}</p>
+                <p className="text-3xl font-bold text-gray-900">{course.classes?.length || 0}</p>
                 <p className="text-gray-600">Sinh viên</p>
               </Card>
               <Card className="p-6 text-center">
@@ -639,6 +691,102 @@ export default function CourseDetailPage() {
           </div>
         )}
 
+        {activeTab === 'classes' && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Danh sách lớp học ({classes.length})
+              </h3>
+              <Button
+                onClick={() => setShowCreateClassModal(true)}
+                className="flex items-center"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Tạo lớp học
+              </Button>
+            </div>
+
+            {classesLoading ? (
+              <Card className="p-8 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Đang tải danh sách lớp học...</p>
+              </Card>
+            ) : classes && classes.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {classes.map((classItem) => (
+                  <Card key={classItem._id} className="p-6 hover:shadow-lg transition-shadow">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h4 className="font-semibold text-gray-900 text-lg">{classItem.name}</h4>
+                        <p className="text-sm text-gray-600">Mã lớp: {classItem.code}</p>
+                      </div>
+                      <div className="flex space-x-1">
+                        <Button variant="outline" size="sm">
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Users className="w-4 h-4 mr-2" />
+                        <span>{classItem.students?.length || 0}/{classItem.maxStudents} sinh viên</span>
+                      </div>
+                      
+                      {classItem.schedule && classItem.schedule.length > 0 && (
+                        <div className="space-y-1">
+                          {classItem.schedule.map((sched, index) => (
+                            <div key={index} className="flex items-center text-sm text-gray-600">
+                              <Calendar className="w-4 h-4 mr-2" />
+                              <span>
+                                {getDayName(sched.dayOfWeek)} {sched.startTime}-{sched.endTime}
+                                {sched.room && ` (${sched.room})`}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center text-sm text-gray-600">
+                        <User className="w-4 h-4 mr-2" />
+                        <span>GV: {classItem.teacher?.name || 'Chưa phân công'}</span>
+                      </div>
+                      
+                      <div className="pt-3 border-t border-gray-200">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          classItem.status === 'active' 
+                            ? 'bg-green-100 text-green-800' 
+                            : classItem.status === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {classItem.status === 'active' ? 'Đang hoạt động' : 
+                           classItem.status === 'pending' ? 'Chờ mở lớp' : 'Tạm dừng'}
+                        </span>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="p-8 text-center text-gray-500">
+                <Users2 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p className="text-lg font-medium mb-2">Chưa có lớp học nào</p>
+                <p className="text-sm mb-4">Tạo lớp học đầu tiên để bắt đầu tổ chức các buổi học</p>
+                <Button
+                  onClick={() => setShowCreateClassModal(true)}
+                  className="mt-4"
+                >
+                  Tạo lớp học đầu tiên
+                </Button>
+              </Card>
+            )}
+          </div>
+        )}
+
         {activeTab === 'students' && (
           <div>
             {/* DEBUG BUTTON */}
@@ -647,7 +795,7 @@ export default function CourseDetailPage() {
                 Debug: courseStudents.length = {courseStudents?.length || 0}
               </p>
               <p className="text-sm text-yellow-700 mb-2">
-                Debug: course?.students?.length = {course?.students?.length || 0}
+                Debug: course?.classes?.length = {course?.classes?.length || 0}
               </p>
               <Button 
                 onClick={() => loadCourseStudentsDataSimple(id as string)}
@@ -661,7 +809,7 @@ export default function CourseDetailPage() {
                 onClick={() => {
                   console.log('=== DEBUG INFO ===')
                   console.log('Course:', course)
-                  console.log('Course students:', course?.students)
+                  console.log('Course classes:', course?.classes)
                   console.log('CourseStudents state:', courseStudents)
                   console.log('=== END DEBUG ===')
                 }}
@@ -1726,6 +1874,157 @@ export default function CourseDetailPage() {
                   </Button>
                   <Button type="submit" disabled={enrollmentLoading}>
                     {enrollmentLoading ? 'Đang thêm...' : 'Thêm sinh viên'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Create Class Modal */}
+        {showCreateClassModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-90vh overflow-y-auto p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Tạo lớp học mới</h2>
+                <button
+                  onClick={() => setShowCreateClassModal(false)}
+                  className="p-1 hover:bg-gray-100 rounded-full"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <form onSubmit={(e) => {
+                e.preventDefault()
+                const formData = new FormData(e.currentTarget)
+                const name = formData.get('name') as string
+                const code = formData.get('code') as string
+                const maxStudents = parseInt(formData.get('maxStudents') as string)
+                const dayOfWeek = parseInt(formData.get('dayOfWeek') as string)
+                const startTime = formData.get('startTime') as string
+                const endTime = formData.get('endTime') as string
+                const room = formData.get('room') as string
+                
+                handleCreateClass({
+                  name,
+                  code,
+                  maxStudents,
+                  schedule: [{
+                    dayOfWeek,
+                    startTime,
+                    endTime,
+                    room
+                  }]
+                })
+              }} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tên lớp học <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      name="name"
+                      placeholder="Ví dụ: Lớp CS101-01"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Mã lớp <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      name="code"
+                      placeholder="Ví dụ: CS101-01"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Số lượng sinh viên tối đa
+                  </label>
+                  <Input
+                    name="maxStudents"
+                    type="number"
+                    defaultValue="30"
+                    min="1"
+                    max="100"
+                    required
+                  />
+                </div>
+                
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Lịch học</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Thứ
+                      </label>
+                      <select
+                        name="dayOfWeek"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      >
+                        <option value={1}>Thứ 2</option>
+                        <option value={2}>Thứ 3</option>
+                        <option value={3}>Thứ 4</option>
+                        <option value={4}>Thứ 5</option>
+                        <option value={5}>Thứ 6</option>
+                        <option value={6}>Thứ 7</option>
+                        <option value={0}>Chủ nhật</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Phòng học
+                      </label>
+                      <Input
+                        name="room"
+                        placeholder="Ví dụ: A101, B205..."
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Giờ bắt đầu
+                      </label>
+                      <Input
+                        name="startTime"
+                        type="time"
+                        defaultValue="08:00"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Giờ kết thúc
+                      </label>
+                      <Input
+                        name="endTime"
+                        type="time"
+                        defaultValue="10:00"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end space-x-3 pt-6 border-t">
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    onClick={() => setShowCreateClassModal(false)}
+                  >
+                    Hủy
+                  </Button>
+                  <Button type="submit">
+                    Tạo lớp học
                   </Button>
                 </div>
               </form>

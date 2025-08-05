@@ -126,7 +126,7 @@ export default function StudentCourseDetailPage() {
                 <div className="flex items-center gap-6 text-sm text-gray-500">
                   <div className="flex items-center gap-1">
                     <Users className="w-4 h-4" />
-                    <span>{course.students?.length || 0} sinh viên</span>
+                    <span>{course.classes?.length || 0} lớp học</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
@@ -134,9 +134,9 @@ export default function StudentCourseDetailPage() {
                   </div>
                   <div className="flex items-center gap-1">
                     <span className={`px-2 py-1 text-xs rounded-full ${
-                      course.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      course.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {course.isActive ? 'Hoạt động' : 'Tạm dừng'}
+                      {course.status === 'published' ? 'Hoạt động' : 'Tạm dừng'}
                     </span>
                   </div>
                 </div>
@@ -241,12 +241,12 @@ export default function StudentCourseDetailPage() {
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                     <span className="text-blue-600 font-semibold text-lg">
-                      {course.teacher.firstName?.charAt(0)}{course.teacher.lastName?.charAt(0)}
+                      {course.teacher.name?.charAt(0).toUpperCase()}
                     </span>
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900">
-                      {course.teacher.firstName} {course.teacher.lastName}
+                      {course.teacher.name}
                     </h4>
                     <p className="text-sm text-gray-600">Giảng viên</p>
                   </div>
@@ -258,8 +258,8 @@ export default function StudentCourseDetailPage() {
                 <h3 className="text-lg font-semibold mb-4">Thông tin khóa học</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Tổng sinh viên:</span>
-                    <span className="font-medium">{course.students?.length || 0}</span>
+                    <span className="text-gray-600">Tổng lớp học:</span>
+                    <span className="font-medium">{course.classes?.length || 0}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Số bài thi:</span>
@@ -273,8 +273,8 @@ export default function StudentCourseDetailPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Trạng thái:</span>
-                    <span className={`font-medium ${course.isActive ? 'text-green-600' : 'text-gray-600'}`}>
-                      {course.isActive ? 'Đang hoạt động' : 'Tạm dừng'}
+                    <span className={`font-medium ${course.status === 'published' ? 'text-green-600' : 'text-gray-600'}`}>
+                      {course.status === 'published' ? 'Đang hoạt động' : 'Tạm dừng'}
                     </span>
                   </div>
                 </div>

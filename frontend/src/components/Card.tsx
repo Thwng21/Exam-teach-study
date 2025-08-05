@@ -6,13 +6,25 @@ interface CardProps {
   title?: string
   subtitle?: string
   onClick?: () => void
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
 }
 
-export default function Card({ children, className, title, subtitle, onClick }: CardProps) {
+export default function Card({ 
+  children, 
+  className, 
+  title, 
+  subtitle, 
+  onClick,
+  onMouseEnter,
+  onMouseLeave
+}: CardProps) {
   return (
     <div 
-      className={cn("bg-white rounded-lg shadow-sm border border-gray-200", className)}
+      className={cn("bg-white rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200", className)}
       onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       {(title || subtitle) && (
         <div className="px-6 py-4 border-b border-gray-200">
@@ -20,9 +32,13 @@ export default function Card({ children, className, title, subtitle, onClick }: 
           {subtitle && <p className="text-sm text-gray-600 mt-1">{subtitle}</p>}
         </div>
       )}
-      <div className="p-6">
-        {children}
-      </div>
+      {title || subtitle ? (
+        <div className="p-6">
+          {children}
+        </div>
+      ) : (
+        children
+      )}
     </div>
   )
 }

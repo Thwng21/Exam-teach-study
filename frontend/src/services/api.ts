@@ -15,12 +15,20 @@ const api = axios.create({
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('token');
+    console.log('API Request:', {
+      url: config.url,
+      method: config.method,
+      params: config.params,
+      hasToken: !!token,
+      tokenPreview: token ? token.substring(0, 20) + '...' : null
+    });
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
   (error: any) => {
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
