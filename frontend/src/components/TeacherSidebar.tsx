@@ -13,7 +13,9 @@ import {
   MessageSquare,
   CheckCircle,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Settings,
+  Lock
 } from 'lucide-react'
 
 interface SidebarItem {
@@ -79,6 +81,14 @@ const sidebarItems: SidebarItem[] = [
     icon: MessageSquare,
     href: '/teacher/messages',
     badge: '2'
+  },
+  {
+    id: 'settings',
+    label: 'Cài đặt',
+    icon: Settings,
+    children: [
+      { id: 'change-password', label: 'Đổi mật khẩu', icon: Lock, href: '/auth/change-password' }
+    ]
   }
 ]
 

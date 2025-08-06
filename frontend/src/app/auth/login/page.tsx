@@ -7,11 +7,12 @@ import Button from '@/components/Button'
 import Input from '@/components/Input'
 import Card from '@/components/Card'
 import AppLayout from '@/components/AppLayout'
-import { User, Lock, AlertCircle, UserCheck, GraduationCap } from 'lucide-react'
+import { User, Lock, AlertCircle, UserCheck, GraduationCap, Eye, EyeOff, BookOpen, Shield } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [justLoggedIn, setJustLoggedIn] = useState(false)
@@ -102,92 +103,144 @@ export default function LoginPage() {
 
   return (
     <AppLayout showSidebar={false}>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-100 flex items-center justify-center p-4">
+        <div className="w-full max-w-lg">
+          {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Hệ thống Thi trực tuyến
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl mb-4 shadow-lg">
+              <BookOpen size={32} className="text-white" />
+            </div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent mb-2">
+              EduExam System
             </h1>
-            <p className="text-gray-600">
-              Đăng nhập để tiếp tục
+            <p className="text-gray-600 text-lg">
+              Hệ thống thi trực tuyến thông minh
+            </p>
+            <p className="text-gray-500 text-sm mt-1">
+              Đăng nhập để bắt đầu hành trình học tập của bạn
             </p>
           </div>
 
-        <Card>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <AlertCircle size={16} className="text-red-600" />
-                <span className="text-red-700 text-sm">{error}</span>
+        <Card className="backdrop-blur-sm bg-white/90 border border-white/20 shadow-xl">
+          <div className="p-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {error && (
+                <div className="flex items-center space-x-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <AlertCircle size={20} className="text-red-600 flex-shrink-0" />
+                  <span className="text-red-700 text-sm font-medium">{error}</span>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Địa chỉ Email
+                </label>
+                <div className="relative">
+                  <User size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Nhập email của bạn"
+                    className="pl-10 py-3 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500/20"
+                    required
+                  />
+                </div>
               </div>
-            )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Nhập email của bạn"
-                required
-              />
-            </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Mật khẩu
+                </label>
+                <div className="relative">
+                  <Lock size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Nhập mật khẩu"
+                    className="pl-10 pr-10 py-3 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500/20"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Mật khẩu
-              </label>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Nhập mật khẩu"
-                required
-              />
-            </div>
+              <div className="flex items-center justify-between">
+                <label className="flex items-center">
+                  <input type="checkbox" className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                  <span className="ml-2 text-sm text-gray-600">Ghi nhớ đăng nhập</span>
+                </label>
+                <button
+                  type="button"
+                  className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+                  onClick={() => router.push('/auth/forgot-password')}
+                >
+                  Quên mật khẩu?
+                </button>
+              </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={!email || !password || loading}
-            >
-              {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
-            </Button>
-          </form>
-
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-center text-sm text-gray-600">
-              Chưa có tài khoản?{' '}
-              <button 
-                onClick={() => router.push('/auth/register')}
-                className="text-blue-600 hover:text-blue-800 font-medium"
+              <Button
+                type="submit"
+                className="w-full py-3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                disabled={!email || !password || loading}
               >
-                Đăng ký ngay
-              </button>
-            </p>
-          </div>
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Đang đăng nhập...
+                  </div>
+                ) : (
+                  'Đăng nhập'
+                )}
+              </Button>
+            </form>
 
-          {/* Demo accounts info */}
-          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-600 mb-2 font-medium">Tài khoản demo:</p>
-            <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
-              <div>
-                <div className="flex items-center space-x-1 mb-1">
-                  <UserCheck size={12} />
-                  <span className="font-medium">Giảng viên</span>
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <p className="text-center text-sm text-gray-600">
+                Chưa có tài khoản?{' '}
+                <button 
+                  onClick={() => router.push('/auth/register')}
+                  className="text-indigo-600 hover:text-indigo-800 font-semibold transition-colors"
+                >
+                  Đăng ký ngay
+                </button>
+              </p>
+            </div>
+
+            {/* Demo accounts info */}
+            <div className="mt-6 p-4 bg-gradient-to-r from-gray-50 to-indigo-50 rounded-xl border border-gray-200">
+              <p className="text-sm text-gray-700 mb-3 font-semibold flex items-center">
+                <Shield size={16} className="mr-2 text-indigo-600" />
+                Tài khoản demo để trải nghiệm:
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="bg-white p-3 rounded-lg border border-gray-200">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <UserCheck size={16} className="text-emerald-600" />
+                    <span className="font-semibold text-sm text-gray-800">Giảng viên</span>
+                  </div>
+                  <div className="text-xs text-gray-600 space-y-1">
+                    <div>📧 teacher@demo.com</div>
+                    <div>🔑 password123</div>
+                  </div>
                 </div>
-                <div>teacher@demo.com</div>
-                <div>password123</div>
-              </div>
-              <div>
-                <div className="flex items-center space-x-1 mb-1">
-                  <GraduationCap size={12} />
-                  <span className="font-medium">Sinh viên</span>
+                <div className="bg-white p-3 rounded-lg border border-gray-200">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <GraduationCap size={16} className="text-blue-600" />
+                    <span className="font-semibold text-sm text-gray-800">Sinh viên</span>
+                  </div>
+                  <div className="text-xs text-gray-600 space-y-1">
+                    <div>📧 student@demo.com</div>
+                    <div>🔑 password123</div>
+                  </div>
                 </div>
-                <div>student@demo.com</div>
-                <div>password123</div>
               </div>
             </div>
           </div>

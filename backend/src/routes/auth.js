@@ -6,7 +6,11 @@ const {
   getMe,
   updateProfile,
   updatePassword,
-  logout
+  logout,
+  forgotPassword,
+  resetPassword,
+  verifyEmail,
+  resetPasswordDirect
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 const { authLimiter } = require('../middleware/error');
@@ -56,9 +60,46 @@ const loginValidation = [
     .withMessage('Mật khẩu là bắt buộc')
 ];
 
+const forgotPasswordValidation = [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Email không hợp lệ')
+];
+
+const resetPasswordValidation = [
+  body('token')
+    .notEmpty()
+    .withMessage('Token là bắt buộc'),
+  body('password')
+    .isLength({ min: 6 })
+    .withMessage('Mật khẩu phải có ít nhất 6 ký tự')
+];
+
+const verifyEmailValidation = [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Email không hợp lệ')
+];
+
+const resetPasswordDirectValidation = [
+  body('email')
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Email không hợp lệ'),
+  body('newPassword')
+    .isLength({ min: 6 })
+    .withMessage('Mật khẩu mới phải có ít nhất 6 ký tự')
+];
+
 // Routes
 router.post('/register', authLimiter, registerValidation, register);
 router.post('/login', authLimiter, loginValidation, login);
+router.post('/forgot-password', authLimiter, forgotPasswordValidation, forgotPassword);
+router.put('/reset-password', authLimiter, resetPasswordValidation, resetPassword);
+router.post('/verify-email', authLimiter, verifyEmailValidation, verifyEmail);
+router.put('/reset-password-direct', authLimiter, resetPasswordDirectValidation, resetPasswordDirect);
 router.post('/logout', logout);
 router.get('/me', protect, getMe);
 router.put('/me', protect, updateProfile);

@@ -13,7 +13,8 @@ import {
   BarChart3,
   Shield,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Lock
 } from 'lucide-react'
 
 interface SidebarItem {
@@ -70,7 +71,8 @@ const sidebarItems: SidebarItem[] = [
     icon: Settings,
     children: [
       { id: 'general', label: 'Cài đặt chung', icon: Settings, href: '/admin/settings/general' },
-      { id: 'security', label: 'Bảo mật', icon: Shield, href: '/admin/settings/security' }
+      { id: 'security', label: 'Bảo mật', icon: Shield, href: '/admin/settings/security' },
+      { id: 'change-password', label: 'Đổi mật khẩu', icon: Lock, href: '/auth/change-password' }
     ]
   }
 ]

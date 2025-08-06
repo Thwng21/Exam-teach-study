@@ -62,7 +62,15 @@ const userSchema = new mongoose.Schema({
   courses: [{
     type: mongoose.Schema.ObjectId,
     ref: 'Course'
-  }]
+  }],
+  resetPasswordToken: {
+    type: String,
+    default: null
+  },
+  resetPasswordExpire: {
+    type: Date,
+    default: null
+  }
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
@@ -98,6 +106,23 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 userSchema.methods.updateLastLogin = function() {
   this.lastLogin = new Date();
   return this.save({ validateBeforeSave: false });
+};
+
+// Generate reset password token
+userSchema.methods.getResetPasswordToken = function() {
+  // Generate random token
+  const resetToken = require('crypto').randomBytes(32).toString('hex');
+  
+  // Hash token and save to user
+  this.resetPasswordToken = require('crypto')
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+  
+  // Set expire time (15 minutes)
+  this.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
+  
+  return resetToken;
 };
 
 module.exports = mongoose.model('User', userSchema);

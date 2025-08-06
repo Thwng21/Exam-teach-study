@@ -52,6 +52,32 @@ class ApiService {
     return this.handleResponse(response)
   }
 
+  async updateProfile(profileData: {
+    firstName?: string
+    lastName?: string
+    email?: string
+    department?: string
+  }) {
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(profileData)
+    })
+    return this.handleResponse(response)
+  }
+
+  async changePassword(passwordData: {
+    currentPassword: string
+    newPassword: string
+  }) {
+    const response = await fetch(`${API_BASE_URL}/auth/password`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(passwordData)
+    })
+    return this.handleResponse(response)
+  }
+
   // Course APIs
   async getCourses() {
     const response = await fetch(`${API_BASE_URL}/courses`, {

@@ -10,7 +10,8 @@ import {
   User, 
   Settings, 
   LogOut,
-  ChevronDown 
+  ChevronDown,
+  Lock
 } from 'lucide-react'
 import Button from './Button'
 
@@ -148,9 +149,32 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
                 <p className="text-sm text-gray-500">{user?.email}</p>
               </div>
               <div className="py-1">
-                <button className="flex items-center w-full px-3 py-2 text-sm hover:bg-gray-50">
+                <button 
+                  onClick={() => {
+                    setShowUserMenu(false)
+                    // Navigate to profile based on role
+                    if (user?.role === 'student') {
+                      router.push('/student/profile')
+                    } else if (user?.role === 'teacher') {
+                      router.push('/teacher/profile')
+                    } else {
+                      router.push('/admin/profile')
+                    }
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm hover:bg-gray-50"
+                >
                   <User className="w-4 h-4 mr-2" />
                   Thông tin cá nhân
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowUserMenu(false)
+                    router.push('/auth/change-password')
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm hover:bg-gray-50"
+                >
+                  <Lock className="w-4 h-4 mr-2" />
+                  Đổi mật khẩu
                 </button>
                 <button className="flex items-center w-full px-3 py-2 text-sm hover:bg-gray-50">
                   <Settings className="w-4 h-4 mr-2" />
